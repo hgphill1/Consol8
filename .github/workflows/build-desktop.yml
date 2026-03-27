@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-macos:
+  build-macos-arm64:
     runs-on: macos-latest
     
     steps:
@@ -67,16 +67,88 @@ jobs:
           iconutil -c icns icon.iconset -o icon.icns
           rm -rf icon.iconset icon.png
 
-      - name: Build macOS DMG
+      - name: Build macOS DMG (ARM64)
         working-directory: ./desktop-app
-        run: npm run build:mac
+        run: npm run build:mac -- --arm64
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload DMG artifacts
+      - name: Upload DMG artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CONSOLE-8X-macOS
+          name: CONSOLE-8X-macOS-arm64
+          path: desktop-app/dist/*.dmg
+          retention-days: 30
+
+  build-macos-x64:
+    runs-on: macos-13
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        run: |
+          brew install node@20
+          echo "/usr/local/opt/node@20/bin" >> $GITHUB_PATH
+
+      - name: Verify Node
+        run: |
+          node --version
+          npm --version
+
+      - name: Clean and install frontend dependencies
+        working-directory: ./frontend
+        run: |
+          rm -rf node_modules package-lock.json
+          npm cache clean --force
+          npm install --legacy-peer-deps
+          npm install ajv@8 --save-dev --legacy-peer-deps
+
+      - name: Build React app
+        working-directory: ./frontend
+        env:
+          CI: false
+        run: npm run build
+
+      - name: Install desktop app dependencies
+        working-directory: ./desktop-app
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install --legacy-peer-deps
+
+      - name: Copy React build to desktop app
+        run: cp -r frontend/build desktop-app/
+
+      - name: Create app icon
+        working-directory: ./desktop-app/assets
+        run: |
+          brew install librsvg
+          rsvg-convert -w 1024 -h 1024 icon.svg > icon.png
+          mkdir -p icon.iconset
+          sips -z 16 16 icon.png --out icon.iconset/icon_16x16.png
+          sips -z 32 32 icon.png --out icon.iconset/icon_16x16@2x.png
+          sips -z 32 32 icon.png --out icon.iconset/icon_32x32.png
+          sips -z 64 64 icon.png --out icon.iconset/icon_32x32@2x.png
+          sips -z 128 128 icon.png --out icon.iconset/icon_128x128.png
+          sips -z 256 256 icon.png --out icon.iconset/icon_128x128@2x.png
+          sips -z 256 256 icon.png --out icon.iconset/icon_256x256.png
+          sips -z 512 512 icon.png --out icon.iconset/icon_256x256@2x.png
+          sips -z 512 512 icon.png --out icon.iconset/icon_512x512.png
+          sips -z 1024 1024 icon.png --out icon.iconset/icon_512x512@2x.png
+          iconutil -c icns icon.iconset -o icon.icns
+          rm -rf icon.iconset icon.png
+
+      - name: Build macOS DMG (x64)
+        working-directory: ./desktop-app
+        run: npm run build:mac -- --x64
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CONSOLE-8X-macOS-x64
           path: desktop-app/dist/*.dmg
           retention-days: 30
 
