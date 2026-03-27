@@ -1,12 +1,15 @@
 const { app, BrowserWindow, Menu, dialog, ipcMain, systemPreferences } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const Store = require('electron-store');
-
-// Initialize persistent storage
-const store = new Store();
 
 let mainWindow;
+
+// Simple in-memory store (settings persist via frontend's localforage)
+const store = {
+  data: {},
+  get(key) { return this.data[key]; },
+  set(key, value) { this.data[key] = value; }
+};
 
 // Create the main application window
 function createWindow() {

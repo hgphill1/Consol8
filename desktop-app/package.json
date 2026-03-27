@@ -88,6 +88,5 @@
     "electron-builder": "^24.9.1"
   },
   "dependencies": {
-    "electron-store": "^8.1.0"
   }
 }
