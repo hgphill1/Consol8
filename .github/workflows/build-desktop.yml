@@ -25,9 +25,13 @@ jobs:
           node --version
           npm --version
 
-      - name: Install frontend dependencies
+      - name: Clean and install frontend dependencies
         working-directory: ./frontend
-        run: npm install --legacy-peer-deps
+        run: |
+          rm -rf node_modules package-lock.json
+          npm cache clean --force
+          npm install --legacy-peer-deps
+          npm install ajv@8 --save-dev --legacy-peer-deps
 
       - name: Build React app
         working-directory: ./frontend
@@ -35,7 +39,9 @@ jobs:
 
       - name: Install desktop app dependencies
         working-directory: ./desktop-app
-        run: npm install --legacy-peer-deps
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install --legacy-peer-deps
 
       - name: Copy React build to desktop app
         run: cp -r frontend/build desktop-app/
@@ -84,9 +90,14 @@ jobs:
           choco install nodejs --version=20.10.0 -y
           refreshenv
 
-      - name: Install frontend dependencies
+      - name: Clean and install frontend dependencies
         working-directory: ./frontend
-        run: npm install --legacy-peer-deps
+        shell: bash
+        run: |
+          rm -rf node_modules package-lock.json
+          npm cache clean --force
+          npm install --legacy-peer-deps
+          npm install ajv@8 --save-dev --legacy-peer-deps
 
       - name: Build React app
         working-directory: ./frontend
@@ -94,7 +105,10 @@ jobs:
 
       - name: Install desktop app dependencies
         working-directory: ./desktop-app
-        run: npm install --legacy-peer-deps
+        shell: bash
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install --legacy-peer-deps
 
       - name: Copy React build to desktop app
         shell: bash
