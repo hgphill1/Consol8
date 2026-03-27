@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import './App.css';
 import { useAudioEngine } from './hooks/useAudioEngine';
+import { useElectronMenus, isElectron, saveFileNative } from './hooks/useElectron';
 import { LCDDisplay } from './components/LCDDisplay';
 import { TrackTimeline } from './components/TrackTimeline';
 import { TransportControls } from './components/TransportControls';
 import { ChannelStrip } from './components/ChannelStrip';
 import { BounceDialog } from './components/BounceDialog';
 import { ExportDialog } from './components/ExportDialog';
+import { AudioSettingsDialog } from './components/AudioSettingsDialog';
 import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
 import { 
@@ -14,7 +16,8 @@ import {
   Waveform, 
   FloppyDisk,
   FolderOpen,
-  Info
+  Info,
+  Gear
 } from '@phosphor-icons/react';
 import localforage from 'localforage';
 
@@ -26,7 +29,9 @@ localforage.config({
 
 function App() {
   const [projectName, setProjectName] = useState('Untitled Project');
+  const [projectFilePath, setProjectFilePath] = useState(null);
   const [showMixer, setShowMixer] = useState(true);
+  const [showAudioSettings, setShowAudioSettings] = useState(false);
   const [recordingTrack, setRecordingTrack] = useState(null);
   
   const {
@@ -216,6 +221,122 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isPlaying, play, pause, stop]);
   
+  // Electron menu handlers
+  const handleNewProject = useCallback(() => {
+    // Reset all tracks and settings
+    tracks.forEach((_, index) => clearTrack(index));
+    setProjectName('Untitled Project');
+    setProjectFilePath(null);
+    setBpm(120);
+    stop();
+    toast.success('New project created');
+  }, [tracks, clearTrack, setBpm, stop]);
+  
+  const handleSaveProjectAs = useCallback(async ({ filePath }) => {
+    if (!filePath) return;
+    
+    const projectData = {
+      name: projectName,
+      bpm,
+      metronomeEnabled,
+      tracks: tracks.map(t => ({
+        id: t.id,
+        name: t.name,
+        volume: t.volume,
+        pan: t.pan,
+        muted: t.muted,
+        solo: t.solo,
+        eqHigh: t.eqHigh,
+        eqMid: t.eqMid,
+        eqLow: t.eqLow,
+        reverbSend: t.reverbSend,
+        delaySend: t.delaySend,
+        hasAudio: !!t.audioBuffer
+      })),
+      savedAt: new Date().toISOString()
+    };
+    
+    if (isElectron()) {
+      const result = await window.electronAPI.saveProjectToFile(filePath, projectData);
+      if (result.success) {
+        setProjectFilePath(filePath);
+        toast.success('Project saved', { description: filePath });
+      } else {
+        toast.error('Save failed', { description: result.error });
+      }
+    }
+  }, [projectName, bpm, metronomeEnabled, tracks]);
+  
+  const handleProjectOpened = useCallback(({ filePath, project }) => {
+    setProjectName(project.name);
+    setProjectFilePath(filePath);
+    setBpm(project.bpm);
+    if (project.metronomeEnabled !== undefined) {
+      setMetronomeEnabled(project.metronomeEnabled);
+    }
+    project.tracks?.forEach((savedTrack, index) => {
+      updateTrack(index, {
+        name: savedTrack.name,
+        volume: savedTrack.volume,
+        pan: savedTrack.pan,
+        muted: savedTrack.muted,
+        solo: savedTrack.solo,
+        eqHigh: savedTrack.eqHigh,
+        eqMid: savedTrack.eqMid,
+        eqLow: savedTrack.eqLow,
+        reverbSend: savedTrack.reverbSend,
+        delaySend: savedTrack.delaySend,
+      });
+    });
+    toast.success('Project loaded', { description: project.name });
+  }, [setBpm, setMetronomeEnabled, updateTrack]);
+  
+  const handleAudioImported = useCallback(async ({ filePaths }) => {
+    // Find first empty track
+    let trackIndex = tracks.findIndex(t => !t.audioBuffer);
+    
+    for (const filePath of filePaths) {
+      if (trackIndex >= 8) {
+        toast.warning('No more empty tracks available');
+        break;
+      }
+      
+      if (isElectron()) {
+        const result = await window.electronAPI.readFile(filePath);
+        if (result.success) {
+          const blob = new Blob([result.buffer]);
+          const file = new File([blob], filePath.split('/').pop());
+          await loadAudioToTrack(trackIndex, file);
+          trackIndex = tracks.findIndex((t, i) => i > trackIndex && !t.audioBuffer);
+          if (trackIndex === -1) trackIndex = 8;
+        }
+      }
+    }
+  }, [tracks, loadAudioToTrack]);
+  
+  // Connect Electron menu events
+  useElectronMenus({
+    onNewProject: handleNewProject,
+    onSaveProject: handleSaveProject,
+    onSaveProjectAs: handleSaveProjectAs,
+    onExport: () => {}, // Handled by ExportDialog
+    onProjectOpened: handleProjectOpened,
+    onAudioImported: handleAudioImported,
+    onPlayPause: () => isPlaying ? pause() : play(),
+    onStop: stop,
+    onRecord: handleRecord,
+    onRewind: handleRewind,
+    onForward: handleFastForward,
+    onGotoStart: () => seekTo(0),
+    onToggleMixer: () => setShowMixer(prev => !prev),
+    onZoomIn: () => setZoomLevel(prev => Math.min(10, prev * 1.5)),
+    onZoomOut: () => setZoomLevel(prev => Math.max(1, prev / 1.5)),
+    onZoomReset: () => setZoomLevel(1),
+    onToggleMetronome: () => setMetronomeEnabled(prev => !prev),
+    onShowAudioSettings: () => setShowAudioSettings(true),
+    onShowPreferences: () => setShowAudioSettings(true),
+  });
+  
   return (
     <div 
       className="min-h-screen p-4 md:p-6 font-body"
@@ -224,6 +345,12 @@ function App() {
       data-testid="app-container"
     >
       <Toaster position="top-right" theme="dark" />
+      
+      {/* Audio Settings Dialog */}
+      <AudioSettingsDialog 
+        open={showAudioSettings} 
+        onOpenChange={setShowAudioSettings} 
+      />
       
       {/* Header */}
       <header className="flex items-center justify-between mb-6">
@@ -273,6 +400,16 @@ function App() {
           {/* Bounce & Export */}
           <BounceDialog tracks={tracks} onBounce={bounceTracks} />
           <ExportDialog onExport={exportProject} />
+          
+          {/* Audio Settings */}
+          <button
+            onClick={() => setShowAudioSettings(true)}
+            className="p-2 rounded bg-[var(--hardware-surface)] text-[var(--text-secondary)] hover:text-[var(--accent-cyan)] transition-colors"
+            title="Audio Settings"
+            data-testid="audio-settings-btn"
+          >
+            <Gear className="w-5 h-5" />
+          </button>
           
           {/* View Toggle */}
           <button

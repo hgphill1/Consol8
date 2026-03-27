@@ -1,0 +1,64 @@
+{
+  "name": "tascam-8x",
+  "version": "1.0.0",
+  "description": "TASCAM-8X Digital 8-Track Recorder",
+  "main": "main.js",
+  "author": "TASCAM-8X",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build": "npm run build:react && electron-builder",
+    "build:react": "cd ../frontend && yarn build",
+    "build:mac": "npm run build:react && electron-builder --mac",
+    "pack": "electron-builder --dir"
+  },
+  "build": {
+    "appId": "com.tascam8x.recorder",
+    "productName": "TASCAM-8X",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "build/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.music",
+      "icon": "assets/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.plist"
+    },
+    "dmg": {
+      "title": "TASCAM-8X Installer",
+      "icon": "assets/icon.icns",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0"
+  }
+}

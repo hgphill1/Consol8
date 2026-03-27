@@ -4,7 +4,7 @@
 Build a digital eight track recorder application similar to TASCAM 8-tracker with:
 - Hard limit of 8 tracks with bounce capability
 - Built-in metronome
-- Punch in/out based on measure/beat (not just timecode)
+- Punch in/out based on measure/beat
 - Tempo/BPM setting per project
 - Audio file import (drag & drop)
 - Microphone recording
@@ -13,100 +13,86 @@ Build a digital eight track recorder application similar to TASCAM 8-tracker wit
 - WAV/MP3 export
 - Browser local storage
 - Retro 80s TASCAM + cyberpunk aesthetic
-- Analog-style sliders and faux-LCD display
 
-## User Personas
-1. **Home Recording Artists** - Musicians who need a simple, intuitive multitrack recorder
-2. **Podcast Producers** - Content creators who need to layer multiple audio tracks
-3. **Beat Makers** - Producers who want to record loops and samples with precise timing
-
-## Core Requirements (Static)
-- [x] 8-track hard limit with bounce-to-one capability
-- [x] Built-in metronome with BPM control
-- [x] Measure/beat-based punch in/out
-- [x] Audio file import via drag-drop
-- [x] Microphone recording (Web Audio API)
-- [x] Track effects: Reverb, Delay, EQ (High/Mid/Low)
-- [x] Waveform visualization (Canvas API)
-- [x] WAV export
-- [x] MP3 export (192kbps via lamejs)
-- [x] IndexedDB/localStorage for project persistence
+## Desktop App Requirements (Added)
+- macOS desktop application using Electron
+- DMG installer
+- Native file system access
+- Menu bar integration
+- System audio device selection
 
 ## What's Been Implemented (January 2026)
 
-### Frontend Components
-- **LCDDisplay**: Faux-LCD panel showing timecode, measure:beat, BPM with metronome toggle
-- **TrackTimeline**: 8 horizontal tracks with waveform visualization, drag-drop import, zoom/navigation
-- **ChannelStrip**: Volume fader, pan, EQ knobs (Hi/Mid/Lo), reverb/delay sends
-- **TransportControls**: Play, Pause, Stop, Record, Rewind, Fast Forward, Punch In/Out
-- **BounceDialog**: Select multiple tracks to bounce to single track
-- **ExportDialog**: Export mixdown as WAV or MP3
+### Web Application Features
+- **8-Track Recording**: Hard-limited with microphone recording and file import
+- **LCD Display**: Faux-LCD with timecode, measure:beat, BPM
+- **Transport Controls**: Play, Pause, Stop, Record, Rewind, FF
+- **Mixer Section**: 8 channels with volume faders, pan, 3-band EQ, reverb/delay
+- **Punch In/Out**: Measure/beat-based recording points
+- **Bounce & Export**: Merge tracks, export WAV/MP3 (192kbps via lamejs)
+- **Timeline**: Zoom (1x-10x), navigation, click-to-seek, time ruler
+- **Audio Settings**: Device selection, sample rate, buffer size
 
-### Audio Engine (useAudioEngine hook)
-- Web Audio API based processing
-- BiquadFilter for 3-band EQ
-- ConvolverNode for hall reverb
-- DelayNode with feedback for analog delay
-- MediaRecorder for microphone input
-- Metronome with precise scheduling
-- **Punch-in recording**: Automatic start/stop at specified measure:beat positions
+### Desktop App (Electron)
+- **main.js**: Main process with native menus and IPC
+- **preload.js**: Secure context bridge for renderer
+- **Native Menu Bar**: Full menu with File, Edit, Transport, View, Audio, Window, Help
+- **File Operations**: Open/Save project dialogs, Import audio
+- **Audio Settings**: Native device enumeration
+- **Keyboard Shortcuts**: Space=Play, R=Record, ⌘S=Save, etc.
+- **macOS Entitlements**: Microphone access, file access
+- **DMG Build Config**: electron-builder configuration
 
-### Export Formats
-- **WAV**: Uncompressed, lossless PCM audio
-- **MP3**: Compressed at 192kbps using lamejs encoder
+### File Structure
+```
+/app/
+├── frontend/           # React web app
+│   └── src/
+│       ├── components/
+│       │   ├── AudioSettingsDialog.jsx
+│       │   ├── BounceDialog.jsx
+│       │   ├── ChannelStrip.jsx
+│       │   ├── ExportDialog.jsx
+│       │   ├── LCDDisplay.jsx
+│       │   ├── TrackTimeline.jsx
+│       │   ├── TransportControls.jsx
+│       │   └── WaveformCanvas.jsx
+│       ├── hooks/
+│       │   ├── useAudioEngine.js
+│       │   └── useElectron.js
+│       └── utils/
+│           └── audioUtils.js
+│
+└── desktop-app/        # Electron wrapper
+    ├── main.js
+    ├── preload.js
+    ├── package.json
+    ├── entitlements.mac.plist
+    ├── build.sh
+    └── README.md
+```
 
-### Timeline Features (NEW)
-- **Zoom**: 1x to 10x zoom levels
-- **Navigation**: Left/right scroll through timeline
-- **Time Ruler**: Shows time markers at intervals
-- **Click to Seek**: Click on waveform to jump to position
-- **Keyboard/Mouse**: Ctrl+scroll to zoom, Shift+scroll to navigate
+## Build Instructions
 
-### UI/UX
-- Retro 80s TASCAM aesthetic with cyberpunk colors
-- Neon cyan (#05D9E8) and pink (#FF2A6D) accents
-- VT323 font for LCD displays
-- Analog-style volume faders
-- Scanline effect on LCD screen
+### Desktop App Build
+```bash
+cd /app/desktop-app
+./build.sh
+```
 
-## Prioritized Backlog
+Or manually:
+```bash
+cd /app/frontend && yarn build
+cd /app/desktop-app && npm install
+cp -r ../frontend/build .
+npm run build:mac
+```
 
-### P0 (Critical) - DONE
-- [x] 8-track recording/playback
-- [x] Audio file import
-- [x] Waveform visualization with zoom
-- [x] Transport controls
-- [x] Volume/Pan mixing
-- [x] Punch-in/out recording
-- [x] MP3 export
-
-### P1 (Important) - DONE
-- [x] Metronome
-- [x] Bounce tracks
-- [x] Effects (Reverb/Delay/EQ)
-- [x] Punch in/out with measure/beat timing
-- [x] Timeline zoom and navigation
-- [x] WAV and MP3 export
-
-### P2 (Nice to Have)
-- [ ] Undo/Redo history
-- [ ] Track copy/paste
-- [ ] Time signature changes (currently 4/4 only)
-- [ ] Multiple project slots with browser
-- [ ] Track automation curves
-- [ ] Keyboard shortcuts overlay/help
-
-## Technical Stack
-- React 19 with hooks
-- Web Audio API for all audio processing
-- Canvas API for waveform rendering
-- lamejs for MP3 encoding
-- localforage/IndexedDB for storage
-- Tailwind CSS + custom retro styling
-- Phosphor Icons for iconography
+The DMG will be in `desktop-app/dist/`.
 
 ## Next Action Items
-1. Add undo/redo for track operations
-2. Support time signature changes (3/4, 6/8, etc.)
-3. Add keyboard shortcuts help overlay
-4. Implement track automation (volume/pan curves)
+1. Add app icon (1024x1024 PNG → .icns)
+2. Code signing for distribution
+3. Windows build support
+4. Track automation curves
+5. Undo/redo history
