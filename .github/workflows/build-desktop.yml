@@ -27,7 +27,7 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Build React app
         working-directory: ./frontend
@@ -35,7 +35,7 @@ jobs:
 
       - name: Install desktop app dependencies
         working-directory: ./desktop-app
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Copy React build to desktop app
         run: cp -r frontend/build desktop-app/
@@ -86,7 +86,7 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Build React app
         working-directory: ./frontend
@@ -94,7 +94,7 @@ jobs:
 
       - name: Install desktop app dependencies
         working-directory: ./desktop-app
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Copy React build to desktop app
         shell: bash
