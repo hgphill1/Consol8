@@ -7,9 +7,9 @@
   "license": "MIT",
   "scripts": {
     "start": "electron .",
-    "build": "npm run build:react && electron-builder",
-    "build:react": "cd ../frontend && yarn build",
-    "build:mac": "npm run build:react && electron-builder --mac",
+    "build": "electron-builder",
+    "build:react": "cd ../frontend && CI=false yarn build",
+    "build:mac": "electron-builder --mac",
     "build:win": "electron-builder --win",
     "pack": "electron-builder --dir"
   },
