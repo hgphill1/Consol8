@@ -33,6 +33,7 @@ function App() {
     isInitialized,
     isPlaying,
     isRecording,
+    isPunchRecording,
     currentTime,
     bpm,
     setBpm,
@@ -49,6 +50,10 @@ function App() {
     setPunchOutMeasure,
     punchOutBeat,
     setPunchOutBeat,
+    zoomLevel,
+    setZoomLevel,
+    scrollPosition,
+    setScrollPosition,
     initAudio,
     play,
     pause,
@@ -323,8 +328,13 @@ function App() {
           onLoadAudio={loadAudioToTrack}
           onClearTrack={clearTrack}
           onUpdateTrack={updateTrack}
-          isRecording={isRecording}
+          isRecording={isRecording || isPunchRecording}
           recordingTrackIndex={recordingTrack}
+          zoomLevel={zoomLevel}
+          onZoomChange={setZoomLevel}
+          scrollPosition={scrollPosition}
+          onScrollChange={setScrollPosition}
+          onSeek={seekTo}
         />
         
         {/* Bottom Section: Transport + Mixer */}

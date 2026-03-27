@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { WaveformCanvas } from './WaveformCanvas';
 import { 
   Microphone, 
@@ -6,7 +6,11 @@ import {
   SpeakerSlash, 
   Star,
   Trash,
-  Upload
+  Upload,
+  MagnifyingGlassPlus,
+  MagnifyingGlassMinus,
+  ArrowLeft,
+  ArrowRight
 } from '@phosphor-icons/react';
 
 export function TrackTimeline({
@@ -17,9 +21,15 @@ export function TrackTimeline({
   onUpdateTrack,
   isRecording,
   recordingTrackIndex,
+  zoomLevel = 1,
+  onZoomChange,
+  scrollPosition = 0,
+  onScrollChange,
+  onSeek,
 }) {
   const [dragOverTrack, setDragOverTrack] = useState(null);
   const fileInputRefs = useRef([]);
+  const timelineRef = useRef(null);
   
   const handleDragOver = (e, trackIndex) => {
     e.preventDefault();
@@ -52,27 +62,195 @@ export function TrackTimeline({
   };
   
   // Calculate max duration for timeline
-  const maxDuration = Math.max(
+  const baseDuration = Math.max(
     60, // Minimum 60 seconds display
     ...tracks.map(t => t.audioBuffer ? t.audioBuffer.duration : 0)
   );
   
+  // Zoomed duration (visible window)
+  const visibleDuration = baseDuration / zoomLevel;
+  const maxScroll = Math.max(0, baseDuration - visibleDuration);
+  
+  // Calculate visible time range
+  const startTime = scrollPosition;
+  const endTime = scrollPosition + visibleDuration;
+  
+  // Handle zoom
+  const handleZoomIn = useCallback(() => {
+    if (onZoomChange) {
+      const newZoom = Math.min(10, zoomLevel * 1.5);
+      onZoomChange(newZoom);
+    }
+  }, [zoomLevel, onZoomChange]);
+  
+  const handleZoomOut = useCallback(() => {
+    if (onZoomChange) {
+      const newZoom = Math.max(1, zoomLevel / 1.5);
+      onZoomChange(newZoom);
+      // Adjust scroll if needed
+      if (onScrollChange && scrollPosition > baseDuration - baseDuration / newZoom) {
+        onScrollChange(Math.max(0, baseDuration - baseDuration / newZoom));
+      }
+    }
+  }, [zoomLevel, onZoomChange, scrollPosition, baseDuration, onScrollChange]);
+  
+  // Handle scroll/navigation
+  const handleScrollLeft = useCallback(() => {
+    if (onScrollChange) {
+      const step = visibleDuration * 0.25;
+      onScrollChange(Math.max(0, scrollPosition - step));
+    }
+  }, [scrollPosition, visibleDuration, onScrollChange]);
+  
+  const handleScrollRight = useCallback(() => {
+    if (onScrollChange) {
+      const step = visibleDuration * 0.25;
+      onScrollChange(Math.min(maxScroll, scrollPosition + step));
+    }
+  }, [scrollPosition, visibleDuration, maxScroll, onScrollChange]);
+  
+  // Handle timeline click for seeking
+  const handleTimelineClick = useCallback((e, trackIndex) => {
+    if (!onSeek || !timelineRef.current) return;
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const percentage = x / rect.width;
+    const clickTime = startTime + (percentage * visibleDuration);
+    onSeek(Math.max(0, clickTime));
+  }, [onSeek, startTime, visibleDuration]);
+  
+  // Handle wheel zoom
+  const handleWheel = useCallback((e) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        handleZoomIn();
+      } else {
+        handleZoomOut();
+      }
+    } else if (e.shiftKey && onScrollChange) {
+      e.preventDefault();
+      const step = visibleDuration * 0.1;
+      if (e.deltaY < 0 || e.deltaX < 0) {
+        onScrollChange(Math.max(0, scrollPosition - step));
+      } else {
+        onScrollChange(Math.min(maxScroll, scrollPosition + step));
+      }
+    }
+  }, [handleZoomIn, handleZoomOut, scrollPosition, visibleDuration, maxScroll, onScrollChange]);
+  
+  // Format time for ruler
+  const formatRulerTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+  
+  // Generate ruler marks
+  const rulerMarks = [];
+  const markInterval = visibleDuration > 30 ? 10 : visibleDuration > 10 ? 5 : 1;
+  for (let t = Math.ceil(startTime / markInterval) * markInterval; t <= endTime; t += markInterval) {
+    const percentage = ((t - startTime) / visibleDuration) * 100;
+    rulerMarks.push({ time: t, percentage });
+  }
+  
   return (
-    <div className="hardware-panel rounded-lg p-4" data-testid="track-timeline">
-      {/* Timeline Header */}
+    <div 
+      className="hardware-panel rounded-lg p-4" 
+      data-testid="track-timeline"
+      ref={timelineRef}
+      onWheel={handleWheel}
+    >
+      {/* Timeline Header with Zoom Controls */}
       <div className="flex items-center justify-between mb-3 pb-2 border-b border-[var(--border-subtle)]">
         <span className="font-lcd text-xs tracking-[0.2em] text-[var(--text-secondary)]">
           TIMELINE - 8 TRACKS
         </span>
+        
+        {/* Zoom and Navigation Controls */}
+        <div className="flex items-center gap-2">
+          {/* Navigation */}
+          <button
+            onClick={handleScrollLeft}
+            disabled={scrollPosition <= 0}
+            className="p-1.5 rounded bg-[var(--hardware-surface)] text-[var(--text-secondary)] hover:text-[var(--accent-cyan)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            data-testid="timeline-scroll-left"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          
+          {/* Zoom Out */}
+          <button
+            onClick={handleZoomOut}
+            disabled={zoomLevel <= 1}
+            className="p-1.5 rounded bg-[var(--hardware-surface)] text-[var(--text-secondary)] hover:text-[var(--accent-cyan)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            data-testid="timeline-zoom-out"
+          >
+            <MagnifyingGlassMinus className="w-4 h-4" />
+          </button>
+          
+          {/* Zoom Level Display */}
+          <span className="font-lcd text-xs text-[var(--accent-cyan)] min-w-[40px] text-center" data-testid="zoom-level">
+            {zoomLevel.toFixed(1)}x
+          </span>
+          
+          {/* Zoom In */}
+          <button
+            onClick={handleZoomIn}
+            disabled={zoomLevel >= 10}
+            className="p-1.5 rounded bg-[var(--hardware-surface)] text-[var(--text-secondary)] hover:text-[var(--accent-cyan)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            data-testid="timeline-zoom-in"
+          >
+            <MagnifyingGlassPlus className="w-4 h-4" />
+          </button>
+          
+          {/* Navigation */}
+          <button
+            onClick={handleScrollRight}
+            disabled={scrollPosition >= maxScroll}
+            className="p-1.5 rounded bg-[var(--hardware-surface)] text-[var(--text-secondary)] hover:text-[var(--accent-cyan)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            data-testid="timeline-scroll-right"
+          >
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+        
+        {/* Time Range Display */}
         <div className="flex items-center gap-4 font-lcd text-xs text-[var(--text-secondary)]">
-          <span>00:00</span>
-          <div className="w-32 h-px bg-[var(--border-subtle)]" />
-          <span>{Math.floor(maxDuration / 60).toString().padStart(2, '0')}:{Math.floor(maxDuration % 60).toString().padStart(2, '0')}</span>
+          <span>{formatRulerTime(startTime)}</span>
+          <div className="w-32 h-px bg-[var(--border-subtle)] relative">
+            {/* Mini ruler marks */}
+            {rulerMarks.slice(0, 5).map((mark, i) => (
+              <div 
+                key={i}
+                className="absolute top-1/2 w-px h-2 bg-[var(--accent-cyan)] opacity-50"
+                style={{ left: `${mark.percentage}%`, transform: 'translateY(-50%)' }}
+              />
+            ))}
+          </div>
+          <span>{formatRulerTime(endTime)}</span>
         </div>
       </div>
       
+      {/* Time Ruler */}
+      <div className="relative h-5 mb-2 border-b border-[var(--border-subtle)]">
+        {rulerMarks.map((mark, i) => (
+          <div 
+            key={i}
+            className="absolute flex flex-col items-center"
+            style={{ left: `${mark.percentage}%`, transform: 'translateX(-50%)' }}
+          >
+            <span className="font-lcd text-[10px] text-[var(--text-secondary)]">
+              {formatRulerTime(mark.time)}
+            </span>
+            <div className="w-px h-1.5 bg-[var(--border-subtle)]" />
+          </div>
+        ))}
+      </div>
+      
       {/* Tracks */}
-      <div className="space-y-2">
+      <div className="space-y-2 relative">
         {tracks.map((track, index) => (
           <div
             key={track.id}
@@ -162,8 +340,9 @@ export function TrackTimeline({
             
             {/* Waveform Area */}
             <div 
-              className="flex-grow h-[60px] rounded overflow-hidden waveform-track relative"
+              className="flex-grow h-[60px] rounded overflow-hidden waveform-track relative cursor-pointer"
               style={{ minWidth: '200px' }}
+              onClick={(e) => handleTimelineClick(e, index)}
             >
               {track.waveformData ? (
                 <WaveformCanvas
@@ -173,12 +352,18 @@ export function TrackTimeline({
                   color={track.armed ? '#FF2A6D' : '#05D9E8'}
                   currentTime={currentTime}
                   duration={track.audioBuffer?.duration || 0}
+                  startTime={startTime}
+                  endTime={endTime}
+                  zoomLevel={zoomLevel}
                   className="w-full h-full"
                 />
               ) : (
                 <div 
                   className="flex items-center justify-center h-full text-[var(--text-secondary)] cursor-pointer hover:bg-[rgba(5,217,232,0.05)] transition-colors"
-                  onClick={() => fileInputRefs.current[index]?.click()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileInputRefs.current[index]?.click();
+                  }}
                 >
                   <Upload className="w-5 h-5 mr-2" />
                   <span className="text-xs">Drop audio file or click to import</span>
@@ -217,19 +402,26 @@ export function TrackTimeline({
             )}
           </div>
         ))}
+        
+        {/* Playhead */}
+        {currentTime >= startTime && currentTime <= endTime && (
+          <div 
+            className="absolute top-0 bottom-0 w-0.5 bg-[var(--accent-pink)] pointer-events-none z-10"
+            style={{
+              left: `calc(${((currentTime - startTime) / visibleDuration) * 100}% + 140px)`,
+              boxShadow: '0 0 8px var(--accent-pink)'
+            }}
+            data-testid="timeline-playhead"
+          />
+        )}
       </div>
       
-      {/* Playhead */}
-      {maxDuration > 0 && (
-        <div 
-          className="absolute top-0 bottom-0 w-0.5 bg-[var(--accent-pink)] pointer-events-none z-10"
-          style={{
-            left: `${(currentTime / maxDuration) * 100}%`,
-            boxShadow: '0 0 8px var(--accent-pink)'
-          }}
-          data-testid="timeline-playhead"
-        />
-      )}
+      {/* Zoom hint */}
+      <div className="mt-2 text-center">
+        <span className="font-lcd text-[10px] text-[var(--text-secondary)] opacity-50">
+          Ctrl+Scroll to zoom • Shift+Scroll to navigate • Click waveform to seek
+        </span>
+      </div>
     </div>
   );
 }

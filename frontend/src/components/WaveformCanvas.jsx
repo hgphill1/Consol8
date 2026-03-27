@@ -7,6 +7,9 @@ export function WaveformCanvas({
   color = '#05D9E8',
   currentTime = 0,
   duration = 0,
+  startTime = 0,
+  endTime = null,
+  zoomLevel = 1,
   className = ''
 }) {
   const canvasRef = useRef(null);
@@ -38,26 +41,43 @@ export function WaveformCanvas({
     }
     
     const centerY = height / 2;
-    const barWidth = width / waveformData.length;
+    
+    // Calculate visible portion based on zoom
+    const actualEndTime = endTime !== null ? endTime : duration;
+    const visibleDuration = actualEndTime - startTime;
+    
+    // Calculate which samples to display
+    const samplesPerSecond = waveformData.length / duration;
+    const startSample = Math.max(0, Math.floor(startTime * samplesPerSecond));
+    const endSample = Math.min(waveformData.length, Math.ceil(actualEndTime * samplesPerSecond));
+    const visibleSamples = endSample - startSample;
+    
+    if (visibleSamples <= 0) return;
+    
+    const barWidth = width / visibleSamples;
     
     // Draw waveform bars
     ctx.fillStyle = color;
     ctx.shadowColor = color;
     ctx.shadowBlur = 4;
     
-    waveformData.forEach((sample, index) => {
-      const x = index * barWidth;
+    for (let i = 0; i < visibleSamples; i++) {
+      const sampleIndex = startSample + i;
+      if (sampleIndex >= waveformData.length) break;
+      
+      const sample = waveformData[sampleIndex];
+      const x = i * barWidth;
       const minHeight = Math.abs(sample.min) * centerY;
       const maxHeight = Math.abs(sample.max) * centerY;
       
       // Draw symmetric waveform
-      ctx.fillRect(x, centerY - maxHeight, Math.max(barWidth - 1, 1), maxHeight);
-      ctx.fillRect(x, centerY, Math.max(barWidth - 1, 1), minHeight);
-    });
+      ctx.fillRect(x, centerY - maxHeight, Math.max(barWidth - 0.5, 1), maxHeight);
+      ctx.fillRect(x, centerY, Math.max(barWidth - 0.5, 1), minHeight);
+    }
     
-    // Draw playhead if playing
-    if (duration > 0 && currentTime > 0) {
-      const playheadX = (currentTime / duration) * width;
+    // Draw playhead if current time is within visible range
+    if (duration > 0 && currentTime >= startTime && currentTime <= actualEndTime) {
+      const playheadX = ((currentTime - startTime) / visibleDuration) * width;
       ctx.shadowBlur = 0;
       ctx.fillStyle = '#FF2A6D';
       ctx.fillRect(playheadX - 1, 0, 2, height);
@@ -68,16 +88,15 @@ export function WaveformCanvas({
       ctx.fillRect(playheadX - 1, 0, 2, height);
     }
     
-  }, [waveformData, width, height, color, currentTime, duration]);
+  }, [waveformData, width, height, color, currentTime, duration, startTime, endTime, zoomLevel]);
   
   return (
     <canvas
       ref={canvasRef}
       className={className}
       style={{ 
-        width: `${width}px`, 
+        width: '100%', 
         height: `${height}px`,
-        imageRendering: 'pixelated'
       }}
       data-testid="waveform-canvas"
     />

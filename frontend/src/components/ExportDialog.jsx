@@ -95,8 +95,8 @@ export function ExportDialog({ onExport }) {
           </div>
           
           {format === 'mp3' && (
-            <p className="mt-3 text-xs text-[var(--accent-yellow)] font-lcd">
-              Note: MP3 export currently outputs WAV format. Full MP3 encoding coming soon.
+            <p className="mt-3 text-xs text-[var(--accent-cyan)] font-lcd">
+              MP3 export at 192kbps using LAME encoder.
             </p>
           )}
         </div>

@@ -175,3 +175,93 @@ export function calculateNextBeatTime(currentTime, bpm, lastBeatTime) {
   if (lastBeatTime === null) return currentTime;
   return lastBeatTime + beatInterval;
 }
+
+// Convert AudioBuffer to MP3 Blob using lamejs
+export async function audioBufferToMp3(audioBuffer, bitRate = 128) {
+  // Dynamic import of lamejs
+  const lamejs = await import('lamejs');
+  
+  const numChannels = audioBuffer.numberOfChannels;
+  const sampleRate = audioBuffer.sampleRate;
+  const mp3encoder = new lamejs.Mp3Encoder(numChannels, sampleRate, bitRate);
+  
+  // Get audio data
+  const left = audioBuffer.getChannelData(0);
+  const right = numChannels > 1 ? audioBuffer.getChannelData(1) : left;
+  
+  // Convert float32 to int16
+  const leftInt = new Int16Array(left.length);
+  const rightInt = new Int16Array(right.length);
+  
+  for (let i = 0; i < left.length; i++) {
+    leftInt[i] = Math.max(-32768, Math.min(32767, Math.round(left[i] * 32767)));
+    rightInt[i] = Math.max(-32768, Math.min(32767, Math.round(right[i] * 32767)));
+  }
+  
+  // Encode in chunks
+  const mp3Data = [];
+  const sampleBlockSize = 1152;
+  
+  for (let i = 0; i < leftInt.length; i += sampleBlockSize) {
+    const leftChunk = leftInt.subarray(i, i + sampleBlockSize);
+    const rightChunk = rightInt.subarray(i, i + sampleBlockSize);
+    
+    const mp3buf = numChannels === 1 
+      ? mp3encoder.encodeBuffer(leftChunk)
+      : mp3encoder.encodeBuffer(leftChunk, rightChunk);
+    
+    if (mp3buf.length > 0) {
+      mp3Data.push(mp3buf);
+    }
+  }
+  
+  // Flush remaining data
+  const mp3buf = mp3encoder.flush();
+  if (mp3buf.length > 0) {
+    mp3Data.push(mp3buf);
+  }
+  
+  // Combine all chunks
+  const totalLength = mp3Data.reduce((acc, buf) => acc + buf.length, 0);
+  const mp3Array = new Uint8Array(totalLength);
+  let offset = 0;
+  
+  for (const buf of mp3Data) {
+    mp3Array.set(buf, offset);
+    offset += buf.length;
+  }
+  
+  return new Blob([mp3Array], { type: 'audio/mp3' });
+}
+
+// Extract waveform data with zoom support
+export function extractWaveformDataWithZoom(audioBuffer, samples = 1000, startTime = 0, endTime = null) {
+  const channelData = audioBuffer.getChannelData(0);
+  const sampleRate = audioBuffer.sampleRate;
+  const duration = audioBuffer.duration;
+  
+  const actualEndTime = endTime !== null ? Math.min(endTime, duration) : duration;
+  const startSample = Math.floor(startTime * sampleRate);
+  const endSample = Math.floor(actualEndTime * sampleRate);
+  const totalSamples = endSample - startSample;
+  
+  const blockSize = Math.max(1, Math.floor(totalSamples / samples));
+  const waveformData = [];
+  
+  for (let i = 0; i < samples && (startSample + i * blockSize) < endSample; i++) {
+    const start = startSample + blockSize * i;
+    const end = Math.min(start + blockSize, endSample);
+    let min = 1.0;
+    let max = -1.0;
+    
+    for (let j = start; j < end; j++) {
+      const value = channelData[j] || 0;
+      if (value < min) min = value;
+      if (value > max) max = value;
+    }
+    
+    waveformData.push({ min, max });
+  }
+  
+  return waveformData;
+}

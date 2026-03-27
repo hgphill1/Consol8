@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { createReverbImpulse, extractWaveformData } from '../utils/audioUtils';
+import { createReverbImpulse, extractWaveformData, measureBeatToTime, timeToMeasureBeat } from '../utils/audioUtils';
 
 const DEFAULT_TRACK = {
   id: null,
@@ -42,6 +42,11 @@ export function useAudioEngine() {
   const [punchInBeat, setPunchInBeat] = useState(1);
   const [punchOutMeasure, setPunchOutMeasure] = useState(2);
   const [punchOutBeat, setPunchOutBeat] = useState(1);
+  const [isPunchRecording, setIsPunchRecording] = useState(false);
+  
+  // Zoom state
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [scrollPosition, setScrollPosition] = useState(0);
   
   // Audio context refs
   const audioContextRef = useRef(null);
@@ -64,6 +69,10 @@ export function useAudioEngine() {
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
   const recordingTrackRef = useRef(null);
+  const punchInTimeRef = useRef(null);
+  const punchOutTimeRef = useRef(null);
+  const punchRecordingStartedRef = useRef(false);
+  const mediaStreamRef = useRef(null);
   
   // Initialize audio context
   const initAudio = useCallback(async () => {
@@ -195,8 +204,90 @@ export function useAudioEngine() {
     
     scheduleMetronome();
     
+    // Handle punch-in recording
+    if (punchInEnabled && !isPunchRecording && !punchRecordingStartedRef.current) {
+      const punchInTime = measureBeatToTime(punchInMeasure, punchInBeat, bpm);
+      if (elapsed >= punchInTime) {
+        // Find armed track and start recording
+        const armedTrackIndex = tracks.findIndex(t => t.armed);
+        if (armedTrackIndex >= 0) {
+          punchRecordingStartedRef.current = true;
+          startPunchRecording(armedTrackIndex);
+        }
+      }
+    }
+    
+    // Handle punch-out
+    if (isPunchRecording && punchRecordingStartedRef.current) {
+      const punchOutTime = measureBeatToTime(punchOutMeasure, punchOutBeat, bpm);
+      if (elapsed >= punchOutTime) {
+        stopPunchRecording();
+      }
+    }
+    
     animationFrameRef.current = requestAnimationFrame(updatePlaybackTime);
-  }, [isPlaying, scheduleMetronome]);
+  }, [isPlaying, scheduleMetronome, punchInEnabled, isPunchRecording, punchInMeasure, punchInBeat, punchOutMeasure, punchOutBeat, bpm, tracks]);
+  
+  // Start punch-in recording (internal)
+  const startPunchRecording = useCallback(async (trackIndex) => {
+    if (!audioContextRef.current || isPunchRecording) return;
+    
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      const mediaRecorder = new MediaRecorder(stream);
+      
+      recordedChunksRef.current = [];
+      recordingTrackRef.current = trackIndex;
+      punchInTimeRef.current = currentTime;
+      
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          recordedChunksRef.current.push(e.data);
+        }
+      };
+      
+      mediaRecorder.onstop = async () => {
+        if (recordedChunksRef.current.length === 0) return;
+        
+        const blob = new Blob(recordedChunksRef.current, { type: 'audio/webm' });
+        const arrayBuffer = await blob.arrayBuffer();
+        const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+        
+        // Update track with recorded audio
+        setTracks(prev => {
+          const newTracks = [...prev];
+          newTracks[recordingTrackRef.current] = {
+            ...newTracks[recordingTrackRef.current],
+            audioBuffer,
+            waveformData: extractWaveformData(audioBuffer),
+          };
+          return newTracks;
+        });
+        
+        if (mediaStreamRef.current) {
+          mediaStreamRef.current.getTracks().forEach(track => track.stop());
+        }
+      };
+      
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start(100);
+      setIsPunchRecording(true);
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Failed to start punch recording:', err);
+    }
+  }, [isPunchRecording, currentTime]);
+  
+  // Stop punch-in recording (internal)
+  const stopPunchRecording = useCallback(() => {
+    if (mediaRecorderRef.current && isPunchRecording) {
+      mediaRecorderRef.current.stop();
+      setIsPunchRecording(false);
+      setIsRecording(false);
+      punchRecordingStartedRef.current = false;
+    }
+  }, [isPunchRecording]);
   
   // Play
   const play = useCallback(() => {
@@ -259,7 +350,11 @@ export function useAudioEngine() {
     if (isRecording) {
       stopRecording();
     }
-  }, [pause, isRecording]);
+    if (isPunchRecording) {
+      stopPunchRecording();
+    }
+    punchRecordingStartedRef.current = false;
+  }, [pause, isRecording, isPunchRecording]);
   
   // Seek to time
   const seekTo = useCallback((time) => {
@@ -487,16 +582,15 @@ export function useAudioEngine() {
       });
     }
     
-    // Convert to WAV
-    const { audioBufferToWav } = await import('../utils/audioUtils');
-    const wavBlob = audioBufferToWav(outputBuffer);
-    
     if (format === 'mp3') {
-      // For MP3, we'd need an encoder library - return WAV for now
-      return wavBlob;
+      // Use MP3 encoder
+      const { audioBufferToMp3 } = await import('../utils/audioUtils');
+      return await audioBufferToMp3(outputBuffer, 192);
     }
     
-    return wavBlob;
+    // Default to WAV
+    const { audioBufferToWav } = await import('../utils/audioUtils');
+    return audioBufferToWav(outputBuffer);
   }, [tracks]);
   
   // Cleanup
@@ -515,6 +609,7 @@ export function useAudioEngine() {
     isInitialized,
     isPlaying,
     isRecording,
+    isPunchRecording,
     currentTime,
     bpm,
     setBpm,
@@ -531,6 +626,10 @@ export function useAudioEngine() {
     setPunchOutMeasure,
     punchOutBeat,
     setPunchOutBeat,
+    zoomLevel,
+    setZoomLevel,
+    scrollPosition,
+    setScrollPosition,
     initAudio,
     play,
     pause,
