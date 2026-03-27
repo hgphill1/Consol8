@@ -9,8 +9,8 @@
     "start": "electron .",
     "build": "electron-builder",
     "build:react": "cd ../frontend && CI=false yarn build",
-    "build:mac": "electron-builder --mac",
-    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac --publish never",
+    "build:win": "electron-builder --win --publish never",
     "pack": "electron-builder --dir"
   },
   "build": {
