@@ -5,6 +5,10 @@
   "main": "main.js",
   "author": "CONSOLE-8X",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/user/console-8x"
+  },
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
@@ -16,6 +20,7 @@
   "build": {
     "appId": "com.console8x.recorder",
     "productName": "CONSOLE-8X",
+    "publish": null,
     "directories": {
       "output": "dist"
     },
