@@ -28,11 +28,32 @@ function createWindow() {
 
   // Load the React app
   const isDev = process.env.NODE_ENV === 'development';
+  
+  // Try multiple paths for the build
+  const possiblePaths = [
+    path.join(__dirname, 'build', 'index.html'),
+    path.join(process.resourcesPath, 'app', 'build', 'index.html'),
+    path.join(app.getAppPath(), 'build', 'index.html')
+  ];
+  
   if (isDev) {
     mainWindow.loadURL('http://localhost:3000');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, 'build', 'index.html'));
+    // Find the first path that exists
+    let loadPath = possiblePaths[0];
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        loadPath = p;
+        break;
+      }
+    }
+    
+    console.log('Loading from:', loadPath);
+    mainWindow.loadFile(loadPath);
+    
+    // Open dev tools to debug if needed
+    // mainWindow.webContents.openDevTools();
   }
 
   mainWindow.on('closed', () => {

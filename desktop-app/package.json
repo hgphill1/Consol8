@@ -27,7 +27,15 @@
     "files": [
       "main.js",
       "preload.js",
-      "build/**/*"
+      "build/**/*",
+      "!node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "build",
+        "to": "app/build",
+        "filter": ["**/*"]
+      }
     ],
     "mac": {
       "category": "public.app-category.music",
