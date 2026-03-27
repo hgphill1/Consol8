@@ -6,7 +6,7 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
 
@@ -37,6 +37,13 @@ class StatusCheck(BaseModel):
 class StatusCheckCreate(BaseModel):
     client_name: str
 
+class PaginatedResponse(BaseModel):
+    data: List[StatusCheck]
+    total: int
+    skip: int
+    limit: int
+    has_more: bool
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
@@ -54,17 +61,30 @@ async def create_status_check(input: StatusCheckCreate):
     _ = await db.status_checks.insert_one(doc)
     return status_obj
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
+@api_router.get("/status", response_model=PaginatedResponse)
+async def get_status_checks(skip: int = 0, limit: int = 100):
+    # Validate and cap limit to prevent excessive queries
+    limit = min(max(1, limit), 1000)
+    skip = max(0, skip)
+    
+    # Get total count for pagination info
+    total = await db.status_checks.count_documents({})
+    
+    # Exclude MongoDB's _id field and apply pagination
+    status_checks = await db.status_checks.find({}, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
     
     # Convert ISO string timestamps back to datetime objects
     for check in status_checks:
-        if isinstance(check['timestamp'], str):
+        if isinstance(check.get('timestamp'), str):
             check['timestamp'] = datetime.fromisoformat(check['timestamp'])
     
-    return status_checks
+    return PaginatedResponse(
+        data=status_checks,
+        total=total,
+        skip=skip,
+        limit=limit,
+        has_more=(skip + len(status_checks)) < total
+    )
 
 # Include the router in the main app
 app.include_router(api_router)
