@@ -30,6 +30,7 @@ export function TrackTimeline({
   const [dragOverTrack, setDragOverTrack] = useState(null);
   const fileInputRefs = useRef([]);
   const timelineRef = useRef(null);
+  const waveformContainerRef = useRef(null);
   
   const handleDragOver = (e, trackIndex) => {
     e.preventDefault();
@@ -111,8 +112,9 @@ export function TrackTimeline({
   
   // Handle timeline click for seeking
   const handleTimelineClick = useCallback((e, trackIndex) => {
-    if (!onSeek || !timelineRef.current) return;
+    if (!onSeek) return;
     
+    // Get the waveform container's bounding rect
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const percentage = x / rect.width;
@@ -233,12 +235,22 @@ export function TrackTimeline({
         </div>
       </div>
       
-      {/* Time Ruler */}
-      <div className="relative h-5 mb-2 border-b border-[var(--border-subtle)]">
+      {/* Time Ruler - Clickable for seeking */}
+      <div 
+        className="relative h-5 mb-2 border-b border-[var(--border-subtle)] cursor-pointer"
+        onClick={(e) => {
+          if (!onSeek) return;
+          const rect = e.currentTarget.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const percentage = x / rect.width;
+          const clickTime = startTime + (percentage * visibleDuration);
+          onSeek(Math.max(0, clickTime));
+        }}
+      >
         {rulerMarks.map((mark, i) => (
           <div 
             key={i}
-            className="absolute flex flex-col items-center"
+            className="absolute flex flex-col items-center pointer-events-none"
             style={{ left: `${mark.percentage}%`, transform: 'translateX(-50%)' }}
           >
             <span className="font-lcd text-[10px] text-[var(--text-secondary)]">
@@ -247,6 +259,17 @@ export function TrackTimeline({
             <div className="w-px h-1.5 bg-[var(--border-subtle)]" />
           </div>
         ))}
+        
+        {/* Playhead on ruler */}
+        {currentTime >= startTime && currentTime <= endTime && (
+          <div 
+            className="absolute top-0 bottom-0 w-0.5 bg-[var(--accent-pink)] pointer-events-none"
+            style={{
+              left: `${((currentTime - startTime) / visibleDuration) * 100}%`,
+              boxShadow: '0 0 8px var(--accent-pink)'
+            }}
+          />
+        )}
       </div>
       
       {/* Tracks */}
@@ -347,7 +370,6 @@ export function TrackTimeline({
               {track.waveformData ? (
                 <WaveformCanvas
                   waveformData={track.waveformData}
-                  width={600}
                   height={60}
                   color={track.armed ? '#FF2A6D' : '#05D9E8'}
                   currentTime={currentTime}
@@ -355,7 +377,6 @@ export function TrackTimeline({
                   startTime={startTime}
                   endTime={endTime}
                   zoomLevel={zoomLevel}
-                  className="w-full h-full"
                 />
               ) : (
                 <div 
@@ -402,18 +423,6 @@ export function TrackTimeline({
             )}
           </div>
         ))}
-        
-        {/* Playhead */}
-        {currentTime >= startTime && currentTime <= endTime && (
-          <div 
-            className="absolute top-0 bottom-0 w-0.5 bg-[var(--accent-pink)] pointer-events-none z-10"
-            style={{
-              left: `calc(${((currentTime - startTime) / visibleDuration) * 100}% + 140px)`,
-              boxShadow: '0 0 8px var(--accent-pink)'
-            }}
-            data-testid="timeline-playhead"
-          />
-        )}
       </div>
       
       {/* Zoom hint */}

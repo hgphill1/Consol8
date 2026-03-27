@@ -1,8 +1,7 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
 export function WaveformCanvas({ 
   waveformData, 
-  width = 800, 
   height = 60, 
   color = '#05D9E8',
   currentTime = 0,
@@ -13,21 +12,48 @@ export function WaveformCanvas({
   className = ''
 }) {
   const canvasRef = useRef(null);
+  const containerRef = useRef(null);
+  const [canvasWidth, setCanvasWidth] = useState(600);
+  
+  // Resize observer to get actual container width
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const width = entry.contentRect.width;
+        if (width > 0) {
+          setCanvasWidth(Math.floor(width));
+        }
+      }
+    });
+    
+    resizeObserver.observe(container);
+    
+    // Initial measurement
+    const initialWidth = container.getBoundingClientRect().width;
+    if (initialWidth > 0) {
+      setCanvasWidth(Math.floor(initialWidth));
+    }
+    
+    return () => resizeObserver.disconnect();
+  }, []);
   
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || canvasWidth <= 0) return;
     
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
     
     // Set canvas size with device pixel ratio
-    canvas.width = width * dpr;
+    canvas.width = canvasWidth * dpr;
     canvas.height = height * dpr;
     ctx.scale(dpr, dpr);
     
     // Clear canvas
-    ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, canvasWidth, height);
     
     if (!waveformData || waveformData.length === 0) {
       // Draw empty state
@@ -35,7 +61,7 @@ export function WaveformCanvas({
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(0, height / 2);
-      ctx.lineTo(width, height / 2);
+      ctx.lineTo(canvasWidth, height / 2);
       ctx.stroke();
       return;
     }
@@ -46,6 +72,8 @@ export function WaveformCanvas({
     const actualEndTime = endTime !== null ? endTime : duration;
     const visibleDuration = actualEndTime - startTime;
     
+    if (visibleDuration <= 0) return;
+    
     // Calculate which samples to display
     const samplesPerSecond = waveformData.length / duration;
     const startSample = Math.max(0, Math.floor(startTime * samplesPerSecond));
@@ -54,7 +82,7 @@ export function WaveformCanvas({
     
     if (visibleSamples <= 0) return;
     
-    const barWidth = width / visibleSamples;
+    const barWidth = canvasWidth / visibleSamples;
     
     // Draw waveform bars
     ctx.fillStyle = color;
@@ -77,7 +105,7 @@ export function WaveformCanvas({
     
     // Draw playhead if current time is within visible range
     if (duration > 0 && currentTime >= startTime && currentTime <= actualEndTime) {
-      const playheadX = ((currentTime - startTime) / visibleDuration) * width;
+      const playheadX = ((currentTime - startTime) / visibleDuration) * canvasWidth;
       ctx.shadowBlur = 0;
       ctx.fillStyle = '#FF2A6D';
       ctx.fillRect(playheadX - 1, 0, 2, height);
@@ -88,17 +116,18 @@ export function WaveformCanvas({
       ctx.fillRect(playheadX - 1, 0, 2, height);
     }
     
-  }, [waveformData, width, height, color, currentTime, duration, startTime, endTime, zoomLevel]);
+  }, [waveformData, canvasWidth, height, color, currentTime, duration, startTime, endTime, zoomLevel]);
   
   return (
-    <canvas
-      ref={canvasRef}
-      className={className}
-      style={{ 
-        width: '100%', 
-        height: `${height}px`,
-      }}
-      data-testid="waveform-canvas"
-    />
+    <div ref={containerRef} className={`w-full ${className}`} style={{ height: `${height}px` }}>
+      <canvas
+        ref={canvasRef}
+        style={{ 
+          width: '100%', 
+          height: `${height}px`,
+        }}
+        data-testid="waveform-canvas"
+      />
+    </div>
   );
 }
