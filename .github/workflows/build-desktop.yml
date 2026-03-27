@@ -1,0 +1,126 @@
+name: Build CONSOLE-8X Desktop App
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            frontend/package-lock.json
+            desktop-app/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm install
+
+      - name: Build React app
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Install desktop app dependencies
+        working-directory: ./desktop-app
+        run: npm install
+
+      - name: Copy React build to desktop app
+        run: cp -r frontend/build desktop-app/
+
+      - name: Create app icon
+        working-directory: ./desktop-app/assets
+        run: |
+          # Install librsvg for SVG to PNG conversion
+          brew install librsvg
+          
+          # Convert SVG to PNG
+          rsvg-convert -w 1024 -h 1024 icon.svg > icon.png
+          
+          # Create iconset directory
+          mkdir -p icon.iconset
+          
+          # Generate all required icon sizes
+          sips -z 16 16 icon.png --out icon.iconset/icon_16x16.png
+          sips -z 32 32 icon.png --out icon.iconset/icon_16x16@2x.png
+          sips -z 32 32 icon.png --out icon.iconset/icon_32x32.png
+          sips -z 64 64 icon.png --out icon.iconset/icon_32x32@2x.png
+          sips -z 128 128 icon.png --out icon.iconset/icon_128x128.png
+          sips -z 256 256 icon.png --out icon.iconset/icon_128x128@2x.png
+          sips -z 256 256 icon.png --out icon.iconset/icon_256x256.png
+          sips -z 512 512 icon.png --out icon.iconset/icon_256x256@2x.png
+          sips -z 512 512 icon.png --out icon.iconset/icon_512x512.png
+          sips -z 1024 1024 icon.png --out icon.iconset/icon_512x512@2x.png
+          
+          # Create .icns file
+          iconutil -c icns icon.iconset -o icon.icns
+          
+          # Cleanup
+          rm -rf icon.iconset icon.png
+
+      - name: Build macOS DMG (Universal)
+        working-directory: ./desktop-app
+        run: npm run build:mac
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload DMG artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: CONSOLE-8X-macOS
+          path: |
+            desktop-app/dist/*.dmg
+          retention-days: 30
+
+  # Optional: Build for Windows too
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm install
+
+      - name: Build React app
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Install desktop app dependencies
+        working-directory: ./desktop-app
+        run: npm install
+
+      - name: Copy React build to desktop app
+        run: xcopy frontend\build desktop-app\build\ /E /I /Y
+
+      - name: Build Windows installer
+        working-directory: ./desktop-app
+        run: npm run build:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: CONSOLE-8X-Windows
+          path: |
+            desktop-app/dist/*.exe
+          retention-days: 30
