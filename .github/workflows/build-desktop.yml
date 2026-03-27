@@ -15,10 +15,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
+      - name: Install Node.js
+        run: |
+          brew install node@20
+          echo "/opt/homebrew/opt/node@20/bin" >> $GITHUB_PATH
+
+      - name: Verify Node
+        run: |
+          node --version
+          npm --version
 
       - name: Install frontend dependencies
         working-directory: ./frontend
@@ -74,10 +79,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
+      - name: Install Node.js
+        run: |
+          choco install nodejs --version=20.10.0 -y
+          refreshenv
 
       - name: Install frontend dependencies
         working-directory: ./frontend
