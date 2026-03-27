@@ -1,0 +1,90 @@
+{
+  "theme": "DARK",
+  "archetype": "Archetype 7 (Electric & Neon)",
+  "design_philosophy": "Retro 80s TASCAM Portastudio meets Cyberpunk 2077. Highly tactile, skeuomorphic-leaning 'hardware' elements (sliders, chunky buttons) combined with neon cyberpunk glow and a strict 8-track limitation.",
+  "colors": {
+    "background_base": "#050505",
+    "hardware_surface": "#11131A",
+    "hardware_panel": "#1A1D24",
+    "lcd_screen_bg": "#0D1A15",
+    "lcd_text": "#01FFC3",
+    "accent_cyan": "#05D9E8",
+    "accent_pink": "#FF2A6D",
+    "accent_yellow": "#F4D03F",
+    "accent_red": "#FF3B30",
+    "text_primary": "#E2E8F0",
+    "text_secondary": "#94A3B8",
+    "border_subtle": "#2A2D35"
+  },
+  "typography": {
+    "brand_heading": {
+      "family": "Unbounded, sans-serif",
+      "weight": "800",
+      "tracking": "tracking-tighter"
+    },
+    "lcd_display": {
+      "family": "'VT323', monospace",
+      "weight": "400",
+      "tracking": "tracking-wide"
+    },
+    "body": {
+      "family": "Chivo, sans-serif",
+      "weight": "400",
+      "tracking": "tracking-normal"
+    },
+    "sizes": {
+      "h1": "text-4xl sm:text-5xl",
+      "h2": "text-2xl sm:text-3xl",
+      "lcd_main": "text-4xl sm:text-6xl",
+      "lcd_sub": "text-xl",
+      "body": "text-sm",
+      "labels": "text-xs uppercase tracking-[0.2em]"
+    }
+  },
+  "layout_and_spacing": {
+    "strategy": "Control Room Grid",
+    "container": "w-full min-h-screen bg-background_base text-text_primary p-4 md:p-8 font-body",
+    "grid_gap": "gap-4 md:gap-6"
+  },
+  "component_path": {
+    "top_bar_lcd": "A faux-LCD panel at the top center of the screen displaying BPM, Metronome Status, and Measure/Beat position. Needs scanlines overlay.",
+    "timeline_view": "A large central container spanning the full width, housing 8 horizontal rows for waveform visualization. Must support drag-and-drop file imports.",
+    "mixer_section": "Bottom section organized as a 9-column grid (8 channel strips + 1 master/transport strip).",
+    "channel_strip": "Vertical column containing EQ knobs (Hi/Mid/Low), Reverb/Delay sends, Pan knob, Mute/Solo buttons, Record Arm button, and a tall analog-style volume slider.",
+    "transport_controls": "Chunky, hardware-like buttons (Play, Pause, Stop, Record, Rewind, Fast-Forward) located in the Master section.",
+    "analog_slider": "Built using standard input[type=range] but heavily styled with CSS to look like a physical tactile slider with a raised thumb and recessed track."
+  },
+  "motion_and_visuals": {
+    "surface_strategy": "Retro-Futurism / Tactile",
+    "shadows": {
+      "inset_deep": "inset 0 4px 6px -1px rgba(0, 0, 0, 0.5), inset 0 2px 4px -1px rgba(0, 0, 0, 0.3)",
+      "neon_glow": "0 0 10px rgba(5, 217, 232, 0.5)",
+      "lcd_glow": "drop-shadow(0 0 5px rgba(1, 255, 195, 0.8))"
+    },
+    "textures": "CSS repeating-linear-gradient for scanlines on the LCD screen. Heavy use of dark borders and inset shadows on panels to simulate physical casing."
+  },
+  "image_urls": [
+    {
+      "url": "https://images.pexels.com/photos/4988141/pexels-photo-4988141.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Close-up shot of a professional audio mixer with slide controls in warm lighting",
+      "category": "background_texture_optional_overlay"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1762329858510-46aec8fa54b5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTJ8MHwxfHNlYXJjaHwyfHx2aW50YWdlJTIwYW5hbG9nJTIwbWl4aW5nJTIwY29uc29sZXxlbnwwfHx8fDE3NzQ1ODU3NDZ8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Close-up of vintage audio equipment sliders",
+      "category": "texture_overlay"
+    }
+  ],
+  "instructions_to_main_agent": [
+    "Strictly enforce the 8-track limit in the state management. Render exactly 8 tracks in both the timeline and the mixer.",
+    "Use IndexedDB (e.g., via localforage) to store project metadata and audio data, as browser localStorage will easily exceed the 5MB limit for audio files.",
+    "Implement the Web Audio API for all audio processing. Use BiquadFilterNode for Hi/Mid/Low EQ, DelayNode for Analog Delay, and ConvolverNode for Hall Reverb.",
+    "Create the 'Bounce' feature: Allow users to select multiple tracks and merge them into a single track, freeing up the original slots.",
+    "Implement the Built-in Metronome using a precise Web Audio API scheduling loop (not setInterval) tied to the project's BPM.",
+    "Implement Measure/Beat-based Punch In/Out: Add UI inputs for start and end measures, and automatically trigger the recording state when playback hits the start measure.",
+    "Render waveforms using the Canvas API by extracting audio buffer data. Use the accent_cyan (#05D9E8) or accent_pink (#FF2A6D) colors for the waveform stroke.",
+    "Ensure the analog volume sliders look tactile using Tailwind shadows (e.g., inset tracks, raised thumbs). Do NOT use default browser slider styles.",
+    "All interactive and key informational elements MUST include a 'data-testid' attribute (e.g., data-testid='track-1-volume-slider', data-testid='play-button', data-testid='lcd-bpm-display').",
+    "Install and use @phosphor-icons/react for the dense dashboard iconography."
+  ]
+}
