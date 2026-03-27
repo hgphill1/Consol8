@@ -28,7 +28,7 @@ export function LCDDisplay({
         {/* Top Status Bar */}
         <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#1a2f25]">
           <span className="font-lcd text-sm tracking-wider" style={{ color: '#017a5c' }}>
-            TASCAM-8X DIGITAL
+            CONSOLE-8X DIGITAL
           </span>
           <div className="flex items-center gap-4">
             {isRecording && (

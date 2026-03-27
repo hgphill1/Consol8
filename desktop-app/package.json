@@ -1,9 +1,9 @@
 {
-  "name": "tascam-8x",
+  "name": "console-8x",
   "version": "1.0.0",
-  "description": "TASCAM-8X Digital 8-Track Recorder",
+  "description": "CONSOLE-8X Digital 8-Track Recorder",
   "main": "main.js",
-  "author": "TASCAM-8X",
+  "author": "CONSOLE-8X",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
@@ -13,8 +13,8 @@
     "pack": "electron-builder --dir"
   },
   "build": {
-    "appId": "com.tascam8x.recorder",
-    "productName": "TASCAM-8X",
+    "appId": "com.console8x.recorder",
+    "productName": "CONSOLE-8X",
     "directories": {
       "output": "dist"
     },
@@ -38,7 +38,7 @@
       "entitlementsInherit": "entitlements.mac.plist"
     },
     "dmg": {
-      "title": "TASCAM-8X Installer",
+      "title": "CONSOLE-8X Installer",
       "icon": "assets/icon.icns",
       "contents": [
         {

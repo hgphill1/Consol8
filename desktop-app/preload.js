@@ -56,4 +56,4 @@ contextBridge.exposeInMainWorld('electronAPI', {
 });
 
 // Log that preload script has loaded
-console.log('TASCAM-8X Electron preload script loaded');
+console.log('CONSOLE-8X Electron preload script loaded');

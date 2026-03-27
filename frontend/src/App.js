@@ -23,7 +23,7 @@ import localforage from 'localforage';
 
 // Initialize storage
 localforage.config({
-  name: 'TASCAM8X',
+  name: 'CONSOLE8X',
   storeName: 'projects'
 });
 
@@ -363,7 +363,7 @@ function App() {
             }}
             data-testid="app-title"
           >
-            TASCAM-8X
+            CONSOLE-8X
           </h1>
           <span className="font-lcd text-xs text-[var(--accent-pink)]">DIGITAL</span>
         </div>

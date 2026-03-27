@@ -1,6 +1,6 @@
-# TASCAM-8X Desktop App
+# CONSOLE-8X Desktop App
 
-A macOS desktop application version of the TASCAM-8X Digital 8-Track Recorder.
+A macOS desktop application version of the CONSOLE-8X Digital 8-Track Recorder.
 
 ## Features
 
@@ -149,10 +149,10 @@ For distribution outside the App Store, you may want to sign the app:
 
 ```bash
 # Sign the app
-codesign --deep --force --verify --verbose --sign "Developer ID Application: YOUR NAME" dist/mac/TASCAM-8X.app
+codesign --deep --force --verify --verbose --sign "Developer ID Application: YOUR NAME" dist/mac/CONSOLE-8X.app
 
 # Notarize the DMG
-xcrun notarytool submit dist/TASCAM-8X-*.dmg --apple-id YOUR_APPLE_ID --password YOUR_APP_SPECIFIC_PASSWORD --team-id YOUR_TEAM_ID
+xcrun notarytool submit dist/CONSOLE-8X-*.dmg --apple-id YOUR_APPLE_ID --password YOUR_APP_SPECIFIC_PASSWORD --team-id YOUR_TEAM_ID
 ```
 
 ## Troubleshooting
@@ -160,12 +160,12 @@ xcrun notarytool submit dist/TASCAM-8X-*.dmg --apple-id YOUR_APPLE_ID --password
 ### "App is damaged" error on macOS
 If you see this error, it's because the app isn't signed. Run:
 ```bash
-xattr -cr /Applications/TASCAM-8X.app
+xattr -cr /Applications/CONSOLE-8X.app
 ```
 
 ### Audio permissions
 The app will request microphone permissions on first launch. If denied, go to:
-System Preferences → Security & Privacy → Microphone → Enable TASCAM-8X
+System Preferences → Security & Privacy → Microphone → Enable CONSOLE-8X
 
 ### Build failures
 Make sure you have the latest Xcode Command Line Tools:

@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0a"/>
+      <stop offset="50%" style="stop-color:#111318"/>
+      <stop offset="100%" style="stop-color:#0a0a0a"/>
+    </linearGradient>
+    <linearGradient id="panelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1d24"/>
+      <stop offset="100%" style="stop-color:#11131a"/>
+    </linearGradient>
+    <linearGradient id="lcdGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a1510"/>
+      <stop offset="50%" style="stop-color:#0d1a15"/>
+      <stop offset="100%" style="stop-color:#081210"/>
+    </linearGradient>
+    <linearGradient id="sliderGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0a0a0a"/>
+      <stop offset="50%" style="stop-color:#1a1a1a"/>
+      <stop offset="100%" style="stop-color:#0a0a0a"/>
+    </linearGradient>
+    <linearGradient id="knobGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3a3a3a"/>
+      <stop offset="50%" style="stop-color:#1a1a1a"/>
+      <stop offset="100%" style="stop-color:#0a0a0a"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glowStrong">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="180" fill="url(#bgGrad)"/>
+  
+  <!-- Main Panel -->
+  <rect x="60" y="60" width="904" height="904" rx="40" fill="url(#panelGrad)" stroke="#2a2d35" stroke-width="2"/>
+  
+  <!-- LCD Display -->
+  <rect x="100" y="100" width="824" height="180" rx="12" fill="url(#lcdGrad)" stroke="#1a2f25" stroke-width="2"/>
+  
+  <!-- LCD Scanlines (subtle) -->
+  <g opacity="0.1">
+    <line x1="100" y1="110" x2="924" y2="110" stroke="#000" stroke-width="1"/>
+    <line x1="100" y1="120" x2="924" y2="120" stroke="#000" stroke-width="1"/>
+    <line x1="100" y1="130" x2="924" y2="130" stroke="#000" stroke-width="1"/>
+    <line x1="100" y1="140" x2="924" y2="140" stroke="#000" stroke-width="1"/>
+    <line x1="100" y1="150" x2="924" y2="150" stroke="#000" stroke-width="1"/>
+    <line x1="100" y1="160" x2="924" y2="160" stroke="#000" stroke-width="1"/>
+    <line x1="100" y1="170" x2="924" y2="170" stroke="#000" stroke-width="1"/>
+    <line x1="100" y1="180" x2="924" y2="180" stroke="#000" stroke-width="1"/>
+  </g>
+  
+  <!-- CONSOLE-8X Text -->
+  <text x="512" y="175" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="72" font-weight="900" fill="#01FFC3" filter="url(#glowStrong)">CONSOLE-8X</text>
+  <text x="512" y="220" text-anchor="middle" font-family="monospace" font-size="24" fill="#017a5c">DIGITAL 8-TRACK</text>
+  
+  <!-- 8 Track Channels -->
+  <g>
+    <!-- Channel 1 -->
+    <rect x="100" y="320" width="90" height="580" rx="8" fill="url(#panelGrad)" stroke="#2a2d35" stroke-width="1"/>
+    <text x="145" y="360" text-anchor="middle" font-family="monospace" font-size="28" fill="#05D9E8" filter="url(#glow)">01</text>
+    <rect x="125" y="400" width="40" height="200" rx="4" fill="url(#sliderGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <rect x="130" y="520" width="30" height="16" rx="2" fill="#3a3a3a"/>
+    <circle cx="145" cy="660" r="18" fill="url(#knobGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="145" y1="644" x2="145" y2="652" stroke="#05D9E8" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="145" cy="720" r="18" fill="url(#knobGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="145" y1="704" x2="145" y2="712" stroke="#FF2A6D" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="145" cy="820" r="14" fill="#FF3B30" filter="url(#glow)"/>
+    <circle cx="145" cy="860" r="14" fill="#2a2a2a" stroke="#F4D03F" stroke-width="2"/>
+    
+    <!-- Channel 2 -->
+    <rect x="200" y="320" width="90" height="580" rx="8" fill="url(#panelGrad)" stroke="#2a2d35" stroke-width="1"/>
+    <text x="245" y="360" text-anchor="middle" font-family="monospace" font-size="28" fill="#05D9E8" filter="url(#glow)">02</text>
+    <rect x="225" y="400" width="40" height="200" rx="4" fill="url(#sliderGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <rect x="230" y="480" width="30" height="16" rx="2" fill="#3a3a3a"/>
+    <circle cx="245" cy="660" r="18" fill="url(#knobGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="245" y1="644" x2="245" y2="652" stroke="#05D9E8" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="245" cy="720" r="18" fill="url(#knobGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="245" y1="704" x2="245" y2="712" stroke="#FF2A6D" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="245" cy="820" r="14" fill="#2a2a2a" stroke="#FF3B30" stroke-width="2"/>
+    <circle cx="245" cy="860" r="14" fill="#2a2a2a" stroke="#F4D03F" stroke-width="2"/>
+    
+    <!-- Channel 3 -->
+    <rect x="300" y="320" width="90" height="580" rx="8" fill="url(#panelGrad)" stroke="#2a2d35" stroke-width="1"/>
+    <text x="345" y="360" text-anchor="middle" font-family="monospace" font-size="28" fill="#05D9E8" filter="url(#glow)">03</text>
+    <rect x="325" y="400" width="40" height="200" rx="4" fill="url(#sliderGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <rect x="330" y="450" width="30" height="16" rx="2" fill="#3a3a3a"/>
+    <circle cx="345" cy="660" r="18" fill="url(#knobGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="345" y1="644" x2="345" y2="652" stroke="#05D9E8" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="345" cy="720" r="18" fill="url(#knobGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="345" y1="704" x2="345" y2="712" stroke="#FF2A6D" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="345" cy="820" r="14" fill="#2a2a2a" stroke="#FF3B30" stroke-width="2"/>
+    <circle cx="345" cy="860" r="14" fill="#05D9E8" filter="url(#glow)"/>
+    
+    <!-- Channel 4 -->
+    <rect x="400" y="320" width="90" height="580" rx="8" fill="url(#panelGrad)" stroke="#2a2d35" stroke-width="1"/>
+    <text x="445" y="360" text-anchor="middle" font-family="monospace" font-size="28" fill="#05D9E8" filter="url(#glow)">04</text>
+    <rect x="425" y="400" width="40" height="200" rx="4" fill="url(#sliderGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <rect x="430" y="500" width="30" height="16" rx="2" fill="#3a3a3a"/>
+    <circle cx="445" cy="660" r="18" fill="url(#knobGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="445" y1="644" x2="445" y2="652" stroke="#05D9E8" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="445" cy="720" r="18" fill="url(#knobGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="445" y1="704" x2="445" y2="712" stroke="#FF2A6D" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="445" cy="820" r="14" fill="#2a2a2a" stroke="#FF3B30" stroke-width="2"/>
+    <circle cx="445" cy="860" r="14" fill="#2a2a2a" stroke="#F4D03F" stroke-width="2"/>
+    
+    <!-- Channel 5 -->
+    <rect x="534" y="320" width="90" height="580" rx="8" fill="url(#panelGrad)" stroke="#2a2d35" stroke-width="1"/>
+    <text x="579" y="360" text-anchor="middle" font-family="monospace" font-size="28" fill="#05D9E8" filter="url(#glow)">05</text>
+    <rect x="559" y="400" width="40" height="200" rx="4" fill="url(#sliderGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <rect x="564" y="530" width="30" height="16" rx="2" fill="#3a3a3a"/>
+    <circle cx="579" cy="660" r="18" fill="url(#knobGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="579" y1="644" x2="579" y2="652" stroke="#05D9E8" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="579" cy="720" r="18" fill="url(#knobGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="579" y1="704" x2="579" y2="712" stroke="#FF2A6D" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="579" cy="820" r="14" fill="#2a2a2a" stroke="#FF3B30" stroke-width="2"/>
+    <circle cx="579" cy="860" r="14" fill="#2a2a2a" stroke="#F4D03F" stroke-width="2"/>
+    
+    <!-- Channel 6 -->
+    <rect x="634" y="320" width="90" height="580" rx="8" fill="url(#panelGrad)" stroke="#2a2d35" stroke-width="1"/>
+    <text x="679" y="360" text-anchor="middle" font-family="monospace" font-size="28" fill="#05D9E8" filter="url(#glow)">06</text>
+    <rect x="659" y="400" width="40" height="200" rx="4" fill="url(#sliderGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <rect x="664" y="470" width="30" height="16" rx="2" fill="#3a3a3a"/>
+    <circle cx="679" cy="660" r="18" fill="url(#knobGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="679" y1="644" x2="679" y2="652" stroke="#05D9E8" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="679" cy="720" r="18" fill="url(#knobGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="679" y1="704" x2="679" y2="712" stroke="#FF2A6D" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="679" cy="820" r="14" fill="#2a2a2a" stroke="#FF3B30" stroke-width="2"/>
+    <circle cx="679" cy="860" r="14" fill="#2a2a2a" stroke="#F4D03F" stroke-width="2"/>
+    
+    <!-- Channel 7 -->
+    <rect x="734" y="320" width="90" height="580" rx="8" fill="url(#panelGrad)" stroke="#2a2d35" stroke-width="1"/>
+    <text x="779" y="360" text-anchor="middle" font-family="monospace" font-size="28" fill="#05D9E8" filter="url(#glow)">07</text>
+    <rect x="759" y="400" width="40" height="200" rx="4" fill="url(#sliderGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <rect x="764" y="490" width="30" height="16" rx="2" fill="#3a3a3a"/>
+    <circle cx="779" cy="660" r="18" fill="url(#knobGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="779" y1="644" x2="779" y2="652" stroke="#05D9E8" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="779" cy="720" r="18" fill="url(#knobGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="779" y1="704" x2="779" y2="712" stroke="#FF2A6D" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="779" cy="820" r="14" fill="#2a2a2a" stroke="#FF3B30" stroke-width="2"/>
+    <circle cx="779" cy="860" r="14" fill="#F4D03F" filter="url(#glow)"/>
+    
+    <!-- Channel 8 -->
+    <rect x="834" y="320" width="90" height="580" rx="8" fill="url(#panelGrad)" stroke="#2a2d35" stroke-width="1"/>
+    <text x="879" y="360" text-anchor="middle" font-family="monospace" font-size="28" fill="#05D9E8" filter="url(#glow)">08</text>
+    <rect x="859" y="400" width="40" height="200" rx="4" fill="url(#sliderGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <rect x="864" y="510" width="30" height="16" rx="2" fill="#3a3a3a"/>
+    <circle cx="879" cy="660" r="18" fill="url(#knobGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="879" y1="644" x2="879" y2="652" stroke="#05D9E8" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="879" cy="720" r="18" fill="url(#knobGrad)" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="879" y1="704" x2="879" y2="712" stroke="#FF2A6D" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="879" cy="820" r="14" fill="#2a2a2a" stroke="#FF3B30" stroke-width="2"/>
+    <circle cx="879" cy="860" r="14" fill="#2a2a2a" stroke="#F4D03F" stroke-width="2"/>
+  </g>
+  
+  <!-- Waveform visualization hint at bottom -->
+  <path d="M120 920 Q200 900 280 920 Q360 940 440 920 Q520 900 600 920 Q680 940 760 920 Q840 900 904 920" 
+        stroke="#05D9E8" stroke-width="3" fill="none" opacity="0.6" filter="url(#glow)"/>
+</svg>

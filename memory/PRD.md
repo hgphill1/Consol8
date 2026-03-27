@@ -1,4 +1,4 @@
-# TASCAM-8X Digital 8-Track Recorder - PRD
+# CONSOLE-8X Digital 8-Track Recorder - PRD
 
 ## Original Problem Statement
 Build a digital eight track recorder application similar to TASCAM 8-tracker with:
@@ -12,9 +12,9 @@ Build a digital eight track recorder application similar to TASCAM 8-tracker wit
 - Waveform visualization
 - WAV/MP3 export
 - Browser local storage
-- Retro 80s TASCAM + cyberpunk aesthetic
+- Retro 80s + cyberpunk aesthetic
 
-## Desktop App Requirements (Added)
+## Desktop App Requirements
 - macOS desktop application using Electron
 - DMG installer
 - Native file system access
@@ -42,35 +42,13 @@ Build a digital eight track recorder application similar to TASCAM 8-tracker wit
 - **Keyboard Shortcuts**: Space=Play, R=Record, ⌘S=Save, etc.
 - **macOS Entitlements**: Microphone access, file access
 - **DMG Build Config**: electron-builder configuration
+- **App Icon**: Custom SVG icon with 8-channel mixer design
 
-### File Structure
-```
-/app/
-├── frontend/           # React web app
-│   └── src/
-│       ├── components/
-│       │   ├── AudioSettingsDialog.jsx
-│       │   ├── BounceDialog.jsx
-│       │   ├── ChannelStrip.jsx
-│       │   ├── ExportDialog.jsx
-│       │   ├── LCDDisplay.jsx
-│       │   ├── TrackTimeline.jsx
-│       │   ├── TransportControls.jsx
-│       │   └── WaveformCanvas.jsx
-│       ├── hooks/
-│       │   ├── useAudioEngine.js
-│       │   └── useElectron.js
-│       └── utils/
-│           └── audioUtils.js
-│
-└── desktop-app/        # Electron wrapper
-    ├── main.js
-    ├── preload.js
-    ├── package.json
-    ├── entitlements.mac.plist
-    ├── build.sh
-    └── README.md
-```
+### Icon Created
+- Location: `/app/desktop-app/assets/icon.svg`
+- Design: 8-channel mixer with CONSOLE-8X branding
+- Cyberpunk color scheme (cyan/pink accents)
+- Convert to .icns for macOS using iconutil
 
 ## Build Instructions
 
@@ -80,19 +58,33 @@ cd /app/desktop-app
 ./build.sh
 ```
 
-Or manually:
+### Creating macOS Icon
 ```bash
-cd /app/frontend && yarn build
-cd /app/desktop-app && npm install
-cp -r ../frontend/build .
-npm run build:mac
+# Install librsvg (for SVG to PNG conversion)
+brew install librsvg
+
+# Convert SVG to PNG
+rsvg-convert -w 1024 -h 1024 icon.svg > icon.png
+
+# Create iconset
+mkdir icon.iconset
+sips -z 16 16 icon.png --out icon.iconset/icon_16x16.png
+sips -z 32 32 icon.png --out icon.iconset/icon_16x16@2x.png
+sips -z 32 32 icon.png --out icon.iconset/icon_32x32.png
+sips -z 64 64 icon.png --out icon.iconset/icon_32x32@2x.png
+sips -z 128 128 icon.png --out icon.iconset/icon_128x128.png
+sips -z 256 256 icon.png --out icon.iconset/icon_128x128@2x.png
+sips -z 256 256 icon.png --out icon.iconset/icon_256x256.png
+sips -z 512 512 icon.png --out icon.iconset/icon_256x256@2x.png
+sips -z 512 512 icon.png --out icon.iconset/icon_512x512.png
+sips -z 1024 1024 icon.png --out icon.iconset/icon_512x512@2x.png
+
+# Create .icns file
+iconutil -c icns icon.iconset -o assets/icon.icns
 ```
 
-The DMG will be in `desktop-app/dist/`.
-
 ## Next Action Items
-1. Add app icon (1024x1024 PNG → .icns)
-2. Code signing for distribution
-3. Windows build support
-4. Track automation curves
-5. Undo/redo history
+1. Code signing for distribution (requires Apple Developer ID)
+2. Windows build support
+3. Track automation curves
+4. Undo/redo history

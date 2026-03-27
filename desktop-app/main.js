@@ -15,7 +15,7 @@ function createWindow() {
     height: 900,
     minWidth: 1200,
     minHeight: 700,
-    title: 'TASCAM-8X Digital Recorder',
+    title: 'CONSOLE-8X Digital Recorder',
     titleBarStyle: 'hiddenInset',
     backgroundColor: '#050505',
     webPreferences: {
@@ -47,9 +47,9 @@ function createWindow() {
 function createMenu() {
   const template = [
     {
-      label: 'TASCAM-8X',
+      label: 'CONSOLE-8X',
       submenu: [
-        { label: 'About TASCAM-8X', role: 'about' },
+        { label: 'About CONSOLE-8X', role: 'about' },
         { type: 'separator' },
         {
           label: 'Preferences...',
@@ -57,7 +57,7 @@ function createMenu() {
           click: () => showPreferences()
         },
         { type: 'separator' },
-        { label: 'Hide TASCAM-8X', role: 'hide' },
+        { label: 'Hide CONSOLE-8X', role: 'hide' },
         { label: 'Hide Others', role: 'hideOthers' },
         { label: 'Show All', role: 'unhide' },
         { type: 'separator' },
@@ -215,7 +215,7 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: 'TASCAM-8X Documentation',
+          label: 'CONSOLE-8X Documentation',
           click: () => {
             require('electron').shell.openExternal('https://github.com/tascam-8x/docs');
           }
@@ -295,7 +295,7 @@ function showPreferences() {
 // Show keyboard shortcuts
 function showKeyboardShortcuts() {
   const shortcuts = `
-TASCAM-8X Keyboard Shortcuts
+CONSOLE-8X Keyboard Shortcuts
 
 Transport:
   Space - Play/Pause
